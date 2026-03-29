@@ -10,7 +10,7 @@ title Cosmic Fix Tool
 color 0B
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.4"
+set "CURRENT_VER=1.0.3"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
@@ -70,15 +70,13 @@ echo ==============================
 echo.
 echo [1] Fix Injector / Module Error
 echo [2] Fix Login Error
-echo [3] Fix Antivirus Exclusion
-echo [4] Exit
+echo [3] Exit
 echo.
 set /p choice=Select option: 
 
 if "%choice%"=="1" goto fix_injector
 if "%choice%"=="2" goto fix_login
-if "%choice%"=="3" goto fix_exclusion
-if "%choice%"=="4" exit
+if "%choice%"=="3" exit
 
 goto menu
 
@@ -97,25 +95,18 @@ if errorlevel 1 (
 goto :eof
 
 :launch_synapse
-echo [*] Searching for Synapse Launcher.exe on all drives...
+echo [*] Searching for 06w99o folder on all drives...
 set "found="
 
 for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-    if exist "%%X:\" (
-        for /r "%%X:\" %%F in ("Synapse Launcher.exe") do (
-            if not defined found (
-                set "found=%%~fF"
-            )
-        )
+    if exist "%%X:\06w99o\publish\Synapse Launcher.exe" (
+        set "found=%%X:\06w99o\publish\Synapse Launcher.exe"
+        goto :found_synapse
     )
 )
 
-if not defined found (
-    echo [!] Synapse Launcher.exe not found on any drive!
-    goto :eof
-)
-
-goto :found_synapse
+echo [!] 06w99o\publish\Synapse Launcher.exe not found on any drive!
+goto :eof
 
 :found_synapse
 echo [+] Found: %found%
@@ -175,47 +166,6 @@ echo [*] Removing credentials...
 attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
 del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
 
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
-
-:fix_exclusion
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [*] Adding C:\Cosmic to Windows Defender exclusions...
-powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%cosmicPath%'"
-
-echo [*] Searching for Synapse Launcher.exe on all drives...
-set "synapsefolder="
-
-for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-    if exist "%%X:\" (
-        for /r "%%X:\" %%F in ("Synapse Launcher.exe") do (
-            if not defined synapsefolder (
-                set "synapsefolder=%%~dpF"
-            )
-        )
-    )
-)
-
-if not defined synapsefolder (
-    echo [!] Synapse Launcher.exe not found, skipping...
-    goto :exclusion_done
-)
-
-echo [*] Found Synapse at: %synapsefolder%
-echo [*] Adding Synapse folder to Windows Defender exclusions...
-powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%synapsefolder%'"
-
-:exclusion_done
 echo.
 echo [+] The issue is fixed, enjoy!
 echo.
