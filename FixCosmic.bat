@@ -20,13 +20,9 @@ set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/he
 
 if "%1"=="/updated" goto menu
 
-:: -------------------------------
-:: Güncelleme Kontrolü
-:: -------------------------------
 :check_update
 echo [*] Checking for updates...
 
-:: Versiyon ve indirmeyi tek PowerShell oturumunda yap
 powershell -NoProfile -NonInteractive -Command ^
   "$ErrorActionPreference='SilentlyContinue';" ^
   "$v=(Invoke-WebRequest '%RAW_VER%' -UseBasicParsing -TimeoutSec 5).Content.Trim();" ^
@@ -156,7 +152,7 @@ copy /y "%temp%\cosmic_fix\Cosmic-Injector.exe" "%cosmicPath%\" >nul
 copy /y "%temp%\cosmic_fix\Cosmic-Module.dll" "%cosmicPath%\" >nul
 
 echo.
-echo [+] Injector / Module Fix Completed!
+echo [+] The issue is fixed enjoy!
 echo.
 pause
 goto menu
@@ -173,7 +169,7 @@ attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
 del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
 
 echo.
-echo [+] Login Fix Completed!
+echo [+] The issue is fixed enjoy!
 echo.
 pause
 goto menu
