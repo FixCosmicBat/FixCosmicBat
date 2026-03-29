@@ -1,7 +1,4 @@
 @echo off
-:: -------------------------------
-:: Administrator Check (UAC)
-:: -------------------------------
 net session >nul 2>&1
 if %errorLevel% NEQ 0 (
     echo [!] Administrator permission required. Please approve...
@@ -20,9 +17,6 @@ set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/he
 
 if "%1"=="/updated" goto menu
 
-:: -------------------------------
-:: Update Check
-:: -------------------------------
 :check_update
 echo [*] Checking for updates...
 
@@ -86,9 +80,6 @@ if "%choice%"=="3" exit
 
 goto menu
 
-:: -------------------------------
-:: Kill Synapse
-:: -------------------------------
 :kill_synapse
 tasklist /FI "IMAGENAME eq Synapse Launcher.exe" | find /I "Synapse Launcher.exe" >nul
 if errorlevel 1 (
@@ -103,9 +94,6 @@ if errorlevel 1 (
 )
 goto :eof
 
-:: -------------------------------
-:: Search Synapse (All Drives)
-:: -------------------------------
 :launch_synapse
 echo [*] Searching for 06w99o folder on all drives...
 set "found="
@@ -132,9 +120,6 @@ if errorlevel 1 (
 )
 goto :eof
 
-:: -------------------------------
-:: FIX 1 - Injector / Module
-:: -------------------------------
 :fix_injector
 cls
 echo ==============================
@@ -168,9 +153,6 @@ echo.
 pause
 goto menu
 
-:: -------------------------------
-:: FIX 2 - Login
-:: -------------------------------
 :fix_login
 cls
 echo ==============================
