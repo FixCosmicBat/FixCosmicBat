@@ -18,17 +18,23 @@ set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
 
-:: Yeni güncelleme yüklendiyse update kontrolünü atla
 if "%1"=="/updated" goto menu
 
 :: -------------------------------
-:: Güncelleme Kontrolü (Her açılışta)
+:: Güncelleme Kontrolü
 :: -------------------------------
 :check_update
 echo [*] Checking for updates...
 
-powershell -Command ^
-  "try { $v = (Invoke-WebRequest '%RAW_VER%' -UseBasicParsing -TimeoutSec 5).Content.Trim(); [System.IO.File]::WriteAllText('%temp%\cosmic_ver.txt', $v) } catch { [System.IO.File]::WriteAllText('%temp%\cosmic_ver.txt', '') }"
+:: Versiyon ve indirmeyi tek PowerShell oturumunda yap
+powershell -NoProfile -NonInteractive -Command ^
+  "$ErrorActionPreference='SilentlyContinue';" ^
+  "$v=(Invoke-WebRequest '%RAW_VER%' -UseBasicParsing -TimeoutSec 5).Content.Trim();" ^
+  "if($v -and $v -ne '%CURRENT_VER%'){" ^
+  "  Invoke-WebRequest '%RAW_BAT%' -OutFile '%SELF%.new' -UseBasicParsing -TimeoutSec 15;" ^
+  "  Write-Host $v" ^
+  "} else { Write-Host $v }" ^
+  > "%temp%\cosmic_ver.txt" 2>nul
 
 set "LATEST_VER="
 set /p LATEST_VER=<"%temp%\cosmic_ver.txt"
@@ -41,18 +47,11 @@ if "%LATEST_VER%"=="" (
 
 if "%CURRENT_VER%"=="%LATEST_VER%" (
     echo [+] Already up to date ^(v%CURRENT_VER%^).
-    timeout /t 1 >nul
     goto menu
 )
 
-echo [!] New version found: v%LATEST_VER% ^(current: v%CURRENT_VER%^)
-echo [*] Downloading update...
-
-powershell -Command ^
-  "try { Invoke-WebRequest '%RAW_BAT%' -OutFile '%SELF%.new' -UseBasicParsing -TimeoutSec 15 } catch { Write-Host 'FAIL' }"
-
 if not exist "%SELF%.new" (
-    echo [!] Update download failed. Continuing with current version...
+    echo [!] Update download failed. Continuing...
     goto menu
 )
 
@@ -62,7 +61,7 @@ for %%F in ("%SELF%.new") do if %%~zF==0 (
     goto menu
 )
 
-echo [*] Applying update and restarting...
+echo [+] Updated to v%LATEST_VER%! Restarting...
 echo move /y "%SELF%.new" "%SELF%" > "%temp%\cosmic_update.bat"
 echo start "" "%SELF%" /updated >> "%temp%\cosmic_update.bat"
 echo del "%temp%\cosmic_update.bat" >> "%temp%\cosmic_update.bat"
@@ -147,10 +146,10 @@ del /f /q "%cosmicPath%\Cosmic-Injector.exe" >nul 2>&1
 del /f /q "%cosmicPath%\Cosmic-Module.dll" >nul 2>&1
 
 echo [*] Downloading fix files...
-powershell -Command "Invoke-WebRequest 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/injector_fix.zip/injector_fix.zip' -OutFile '%temp%\injector_fix.zip'"
+powershell -NoProfile -Command "Invoke-WebRequest 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/injector_fix.zip/injector_fix.zip' -OutFile '%temp%\injector_fix.zip'"
 
 echo [*] Extracting...
-powershell -Command "Expand-Archive -Path '%temp%\injector_fix.zip' -DestinationPath '%temp%\cosmic_fix' -Force"
+powershell -NoProfile -Command "Expand-Archive -Path '%temp%\injector_fix.zip' -DestinationPath '%temp%\cosmic_fix' -Force"
 
 echo [*] Replacing files...
 copy /y "%temp%\cosmic_fix\Cosmic-Injector.exe" "%cosmicPath%\" >nul
