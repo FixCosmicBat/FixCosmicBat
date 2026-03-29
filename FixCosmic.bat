@@ -10,7 +10,7 @@ title Cosmic Fix Tool
 color 0B
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.3"
+set "CURRENT_VER=1.0.5"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
