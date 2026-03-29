@@ -1,10 +1,10 @@
 @echo off
 :: -------------------------------
-:: Yönetici kontrolü (UAC)
+:: Administrator Check (UAC)
 :: -------------------------------
 net session >nul 2>&1
 if %errorLevel% NEQ 0 (
-    echo [!] Yönetici izni gerekiyor. Lütfen onay verin...
+    echo [!] Administrator permission required. Please approve...
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
@@ -13,13 +13,16 @@ title Cosmic Fix Tool
 color 0B
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.2"
+set "CURRENT_VER=1.0.0"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
 
 if "%1"=="/updated" goto menu
 
+:: -------------------------------
+:: Update Check
+:: -------------------------------
 :check_update
 echo [*] Checking for updates...
 
@@ -68,6 +71,7 @@ exit
 cls
 echo ==============================
 echo      COSMIC FIX TOOL v%CURRENT_VER%
+echo   Made by Syno317 / BlackStageX
 echo ==============================
 echo.
 echo [1] Fix Injector / Module Error
@@ -83,12 +87,12 @@ if "%choice%"=="3" exit
 goto menu
 
 :: -------------------------------
-:: Synapse Kill
+:: Kill Synapse
 :: -------------------------------
 :kill_synapse
 tasklist /FI "IMAGENAME eq Synapse Launcher.exe" | find /I "Synapse Launcher.exe" >nul
 if errorlevel 1 (
-    echo [*] Synapse not running.
+    echo [*] Synapse is not running.
 ) else (
     echo [*] Killing Synapse...
     taskkill /f /im "Synapse Launcher.exe" /t >nul 2>&1
@@ -100,7 +104,7 @@ if errorlevel 1 (
 goto :eof
 
 :: -------------------------------
-:: Synapse Ara (Tüm sürücüler)
+:: Search Synapse (All Drives)
 :: -------------------------------
 :launch_synapse
 echo [*] Searching for 06w99o folder on all drives...
@@ -124,7 +128,7 @@ if errorlevel 1 (
     start "" "%found%"
     timeout /t 3 >nul
 ) else (
-    echo [*] Synapse already running.
+    echo [*] Synapse is already running.
 )
 goto :eof
 
@@ -133,6 +137,11 @@ goto :eof
 :: -------------------------------
 :fix_injector
 cls
+echo ==============================
+echo      COSMIC FIX TOOL v%CURRENT_VER%
+echo   Made by Syno317 / BlackStageX
+echo ==============================
+echo.
 call :kill_synapse
 
 echo [*] Cleaning old files...
@@ -152,7 +161,9 @@ copy /y "%temp%\cosmic_fix\Cosmic-Injector.exe" "%cosmicPath%\" >nul
 copy /y "%temp%\cosmic_fix\Cosmic-Module.dll" "%cosmicPath%\" >nul
 
 echo.
-echo [+] The issue is fixed enjoy!
+echo [+] The issue is fixed, enjoy!
+echo.
+echo   Made by Syno317 / BlackStageX
 echo.
 pause
 goto menu
@@ -162,14 +173,21 @@ goto menu
 :: -------------------------------
 :fix_login
 cls
+echo ==============================
+echo      COSMIC FIX TOOL v%CURRENT_VER%
+echo   Made by Syno317 / BlackStageX
+echo ==============================
+echo.
 call :kill_synapse
 
-echo [*] Removing Credentials...
+echo [*] Removing credentials...
 attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
 del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
 
 echo.
-echo [+] The issue is fixed enjoy!
+echo [+] The issue is fixed, enjoy!
+echo.
+echo   Made by Syno317 / BlackStageX
 echo.
 pause
 goto menu
