@@ -20,10 +20,21 @@ if "%choice%"=="3" exit
 
 goto menu
 
+:kill_synapse
+echo [*] Killing Synapse...
+
+taskkill /f /im "Synapse Launcher.exe" /t >nul 2>&1
+taskkill /f /im Synapse.exe /t >nul 2>&1
+taskkill /f /im SynapseInjector.exe /t >nul 2>&1
+
+wmic process where "name like '%%Synapse%%'" delete >nul 2>&1
+
+timeout /t 2 >nul
+goto :eof
+
 :fix_injector
 cls
-echo [*] Killing Cosmic...
-taskkill /f /im "Synapse Launcher.exe" >nul 2>&1
+call :kill_synapse
 
 echo [*] Cleaning old files...
 del /f /q C:\Cosmic\Cosmic-Injector >nul 2>&1
@@ -46,8 +57,7 @@ goto menu
 
 :fix_login
 cls
-echo [*] Killing Cosmic...
-taskkill /f /im "Synapse Launcher.exe" >nul 2>&1
+call :kill_synapse
 
 echo [*] Removing Credentials...
 del /f /q C:\Cosmic\Credentials.dat >nul 2>&1
