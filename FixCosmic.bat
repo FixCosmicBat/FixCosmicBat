@@ -18,6 +18,9 @@ set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
 
+:: Yeni güncelleme yüklendiyse update kontrolünü atla
+if "%1"=="/updated" goto menu
+
 :: -------------------------------
 :: Güncelleme Kontrolü (Her açılışta)
 :: -------------------------------
@@ -61,7 +64,7 @@ for %%F in ("%SELF%.new") do if %%~zF==0 (
 
 echo [*] Applying update and restarting...
 echo move /y "%SELF%.new" "%SELF%" > "%temp%\cosmic_update.bat"
-echo start "" "%SELF%" >> "%temp%\cosmic_update.bat"
+echo start "" "%SELF%" /updated >> "%temp%\cosmic_update.bat"
 echo del "%temp%\cosmic_update.bat" >> "%temp%\cosmic_update.bat"
 start "" cmd /c "timeout /t 2 >nul & "%temp%\cosmic_update.bat""
 exit
