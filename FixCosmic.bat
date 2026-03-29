@@ -14,15 +14,20 @@ color 0B
 
 set "cosmicPath=C:\Cosmic"
 set "CURRENT_VER=1.0.0"
+set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
 
 :: -------------------------------
-:: Güncelleme Kontrolü
+:: Güncelleme Kontrolü (Her açılışta)
 :: -------------------------------
 :check_update
 echo [*] Checking for updates...
-powershell -Command "(Invoke-WebRequest '%RAW_VER%' -UseBasicParsing).Content.Trim()" > "%temp%\cosmic_ver.txt" 2>nul
+
+powershell -Command ^
+  "try { $v = (Invoke-WebRequest '%RAW_VER%' -UseBasicParsing -TimeoutSec 5).Content.Trim(); [System.IO.File]::WriteAllText('%temp%\cosmic_ver.txt', $v) } catch { [System.IO.File]::WriteAllText('%temp%\cosmic_ver.txt', '') }"
+
+set "LATEST_VER="
 set /p LATEST_VER=<"%temp%\cosmic_ver.txt"
 del "%temp%\cosmic_ver.txt" >nul 2>&1
 
@@ -39,16 +44,26 @@ if "%CURRENT_VER%"=="%LATEST_VER%" (
 
 echo [!] New version found: v%LATEST_VER% ^(current: v%CURRENT_VER%^)
 echo [*] Downloading update...
-powershell -Command "Invoke-WebRequest '%RAW_BAT%' -OutFile '%~f0.new' -UseBasicParsing"
 
-if not exist "%~f0.new" (
+powershell -Command ^
+  "try { Invoke-WebRequest '%RAW_BAT%' -OutFile '%SELF%.new' -UseBasicParsing -TimeoutSec 15 } catch { Write-Host 'FAIL' }"
+
+if not exist "%SELF%.new" (
     echo [!] Update download failed. Continuing with current version...
     goto menu
 )
 
+:: Dosya boyutu 0 ise indirme başarısız
+for %%F in ("%SELF%.new") do if %%~zF==0 (
+    del "%SELF%.new" >nul 2>&1
+    echo [!] Downloaded file is empty. Continuing...
+    goto menu
+)
+
 echo [*] Applying update and restarting...
-move /y "%~f0.new" "%~f0" >nul 2>&1
-start "" "%~f0"
+:: Eski dosyayı yedekle, yenisini koy, yeniden başlat
+move /y "%SELF%.new" "%SELF%" >nul 2>&1
+start "" "%SELF%"
 exit /b
 
 :menu
@@ -70,7 +85,7 @@ if "%choice%"=="3" exit
 goto menu
 
 :: -------------------------------
-:: Synapse Kill (sadece açıksa)
+:: Synapse Kill
 :: -------------------------------
 :kill_synapse
 tasklist /FI "IMAGENAME eq Synapse Launcher.exe" | find /I "Synapse Launcher.exe" >nul
@@ -87,14 +102,12 @@ if errorlevel 1 (
 goto :eof
 
 :: -------------------------------
-:: Synapse Ara ve Başlat (Tüm sürücüler)
+:: Synapse Ara (Tüm sürücüler)
 :: -------------------------------
 :launch_synapse
 echo [*] Searching for 06w99o folder on all drives...
-
 set "found="
 
-:: Tüm sürücüleri tara (A-Z)
 for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
     if exist "%%X:\06w99o\publish\Synapse Launcher.exe" (
         set "found=%%X:\06w99o\publish\Synapse Launcher.exe"
@@ -102,12 +115,11 @@ for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
     )
 )
 
-echo [!] 06w99o folder or Synapse Launcher.exe not found on any drive!
+echo [!] 06w99o\publish\Synapse Launcher.exe not found on any drive!
 goto :eof
 
 :found_synapse
-echo [+] Found Synapse at: %found%
-
+echo [+] Found: %found%
 tasklist /FI "IMAGENAME eq Synapse Launcher.exe" | find /I "Synapse Launcher.exe" >nul
 if errorlevel 1 (
     echo [*] Launching Synapse...
@@ -126,12 +138,6 @@ cls
 call :kill_synapse
 
 echo [*] Cleaning old files...
-tasklist /FI "IMAGENAME eq Synapse.exe" | find /I "Synapse.exe" >nul
-if %errorlevel%==0 (
-    echo [*] Synapse process running, killing...
-    taskkill /f /im "Synapse.exe" /t >nul 2>&1
-)
-
 attrib -r -s -h "%cosmicPath%\Cosmic-Injector.exe" 2>nul
 attrib -r -s -h "%cosmicPath%\Cosmic-Module.dll" 2>nul
 del /f /q "%cosmicPath%\Cosmic-Injector.exe" >nul 2>&1
@@ -144,8 +150,8 @@ echo [*] Extracting...
 powershell -Command "Expand-Archive -Path '%temp%\injector_fix.zip' -DestinationPath '%temp%\cosmic_fix' -Force"
 
 echo [*] Replacing files...
-copy /y "%temp%\cosmic_fix\Cosmic-Injector.exe" %cosmicPath%\ >nul
-copy /y "%temp%\cosmic_fix\Cosmic-Module.dll" %cosmicPath%\ >nul
+copy /y "%temp%\cosmic_fix\Cosmic-Injector.exe" "%cosmicPath%\" >nul
+copy /y "%temp%\cosmic_fix\Cosmic-Module.dll" "%cosmicPath%\" >nul
 
 echo.
 echo [+] Injector / Module Fix Completed!
