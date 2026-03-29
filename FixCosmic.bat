@@ -63,7 +63,7 @@ for %%F in ("%SELF%.new") do if %%~zF==0 (
 echo [*] Applying update and restarting...
 :: Eski dosyayı yedekle, yenisini koy, yeniden başlat
 move /y "%SELF%.new" "%SELF%" >nul 2>&1
-start "" "%SELF%"
+start "" cmd /c "%SELF%"
 exit /b
 
 :menu
