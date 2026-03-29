@@ -53,7 +53,6 @@ if not exist "%SELF%.new" (
     goto menu
 )
 
-:: Dosya boyutu 0 ise indirme başarısız
 for %%F in ("%SELF%.new") do if %%~zF==0 (
     del "%SELF%.new" >nul 2>&1
     echo [!] Downloaded file is empty. Continuing...
@@ -61,10 +60,11 @@ for %%F in ("%SELF%.new") do if %%~zF==0 (
 )
 
 echo [*] Applying update and restarting...
-:: Eski dosyayı yedekle, yenisini koy, yeniden başlat
-move /y "%SELF%.new" "%SELF%" >nul 2>&1
-start "" cmd /c "%SELF%"
-exit /b
+echo move /y "%SELF%.new" "%SELF%" > "%temp%\cosmic_update.bat"
+echo start "" "%SELF%" >> "%temp%\cosmic_update.bat"
+echo del "%temp%\cosmic_update.bat" >> "%temp%\cosmic_update.bat"
+start "" cmd /c "timeout /t 2 >nul & "%temp%\cosmic_update.bat""
+exit
 
 :menu
 cls
