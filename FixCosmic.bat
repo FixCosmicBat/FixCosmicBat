@@ -10,7 +10,7 @@ title Cosmic Fix Tool
 color 0B
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.1"
+set "CURRENT_VER=1.0.0"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
@@ -115,7 +115,7 @@ if errorlevel 1 (
     taskkill /f /im "Synapse Launcher.exe" /t >nul 2>&1
     taskkill /f /im Synapse.exe /t >nul 2>&1
     taskkill /f /im SynapseInjector.exe /t >nul 2>&1
-    powershell -NoProfile -Command "Get-Process -Name *Synapse* -ErrorAction SilentlyContinue | Stop-Process -Force"
+    powershell -NoProfile -Command "Get-Process -Name *Synapse* -ErrorAction SilentlyContinue | Stop-Process -Force" >nul 2>&1
     timeout /t 2 >nul
 )
 goto :eof
@@ -271,18 +271,6 @@ echo ==============================
 echo.
 echo [*] Adding C:\Cosmic to Windows Defender exclusions...
 powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%cosmicPath%' -ErrorAction SilentlyContinue"
-
-call :find_synapse_launcher
-if not defined found (
-    echo [!] Synapse Launcher.exe not found, skipping...
-    goto :exclusion_done
-)
-set "synapsefolder=%~dpfound"
-echo [*] Found Synapse at: %synapsefolder%
-echo [*] Adding Synapse folder to Windows Defender exclusions...
-powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%synapsefolder%' -ErrorAction SilentlyContinue"
-
-:exclusion_done
 echo.
 echo [+] The issue is fixed, enjoy!
 echo.
