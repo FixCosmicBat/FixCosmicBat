@@ -106,8 +106,6 @@ if "%choice%"=="16" exit
 
 goto menu
 
-:: ==================== COMMON FUNCTIONS ====================
-
 :kill_synapse
 tasklist /FI "IMAGENAME eq Synapse Launcher.exe" | find /I "Synapse Launcher.exe" >nul
 if errorlevel 1 (
@@ -123,7 +121,6 @@ if errorlevel 1 (
 goto :eof
 
 :clean_network
-:: Resets hosts, flushes DNS, kills proxies, disables proxy, resets winhttp proxy
 echo [*] Cleaning network settings...
 echo # Copyright (c) 1993-2009 Microsoft Corp. > "%SystemRoot%\System32\drivers\etc\hosts"
 echo 127.0.0.1       localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
@@ -151,8 +148,6 @@ echo [*] Resetting network stack...
 netsh int ip reset >nul 2>&1
 netsh winsock reset >nul 2>&1
 goto :eof
-
-:: ==================== FIX FUNCTIONS ====================
 
 :fix_injector
 cls
