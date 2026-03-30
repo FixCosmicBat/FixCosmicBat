@@ -10,7 +10,7 @@ title Cosmic Fix Tool
 color 0B
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.0"
+set "CURRENT_VER=1.0.1"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
@@ -115,34 +115,73 @@ if errorlevel 1 (
     taskkill /f /im "Synapse Launcher.exe" /t >nul 2>&1
     taskkill /f /im Synapse.exe /t >nul 2>&1
     taskkill /f /im SynapseInjector.exe /t >nul 2>&1
-    wmic process where "name like '%%Synapse%%'" delete >nul 2>&1
+    powershell -NoProfile -Command "Get-Process -Name *Synapse* -ErrorAction SilentlyContinue | Stop-Process -Force"
     timeout /t 2 >nul
 )
 goto :eof
 
-:launch_synapse
-echo [*] Searching for Synapse Launcher.exe on all drives...
+:find_synapse_launcher
 set "found="
 
-for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-    if exist "%%X:\" (
-        for /r "%%X:\" %%F in ("Synapse Launcher.exe") do (
-            if not defined found (
-                set "found=%%~fF"
-            )
+echo [*] Searching for Synapse Launcher.exe...
+
+:: Quick check in common installation folders
+for %%d in (
+    "%ProgramFiles%\Synapse"
+    "%ProgramFiles(x86)%\Synapse"
+    "%LOCALAPPDATA%\Programs\Synapse"
+    "%APPDATA%\Synapse"
+    "%USERPROFILE%\Desktop\Synapse"
+    "%SystemDrive%\Synapse"
+) do (
+    if exist "%%d\Synapse Launcher.exe" (
+        set "found=%%d\Synapse Launcher.exe"
+        goto :find_synapse_done
+    )
+)
+
+:: Recursive search in common roots (limited depth)
+echo [*] Searching in common folders (this may take a few seconds)...
+set "roots=%ProgramFiles% %ProgramFiles(x86)% %LOCALAPPDATA% %APPDATA% %SystemDrive%\Synapse"
+for %%r in (%roots%) do (
+    if exist "%%r" (
+        for /f "delims=" %%f in ('dir /s /b "%%r\Synapse Launcher.exe" 2^>nul') do (
+            set "found=%%f"
+            goto :find_synapse_done
         )
     )
 )
 
-if not defined found (
-    echo [!] Synapse Launcher.exe not found on any drive!
-    goto :eof
+:: If still not found, search entire C: drive using PowerShell
+echo [*] Performing deep search on C: drive...
+for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-ChildItem -Path C:\ -Filter 'Synapse Launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName"') do set "found=%%i"
+if defined found goto :find_synapse_done
+
+:: Manual entry as last resort
+echo.
+echo [!] Could not find Synapse Launcher.exe automatically.
+echo [*] Please enter the full path to Synapse Launcher.exe:
+set /p "found=Path: "
+if not exist "%found%" (
+    echo [!] File not found. Please try again.
+    set "found="
 )
 
-goto :found_synapse
+:find_synapse_done
+if defined found (
+    echo [+] Found: %found%
+) else (
+    echo [!] Synapse Launcher.exe could not be located.
+)
+goto :eof
 
-:found_synapse
-echo [+] Found: %found%
+:launch_synapse
+call :find_synapse_launcher
+if not defined found (
+    echo [!] Synapse Launcher.exe not found. Please install Synapse first.
+    pause
+    goto :eof
+)
 tasklist /FI "IMAGENAME eq Synapse Launcher.exe" | find /I "Synapse Launcher.exe" >nul
 if errorlevel 1 (
     echo [*] Launching Synapse...
@@ -151,6 +190,22 @@ if errorlevel 1 (
 ) else (
     echo [*] Synapse is already running.
 )
+goto :eof
+
+:clean_network
+:: Resets hosts file, flushes DNS, kills proxies, disables proxy settings, resets winhttp proxy
+echo [*] Cleaning network settings...
+echo # Copyright (c) 1993-2009 Microsoft Corp. > "%SystemRoot%\System32\drivers\etc\hosts"
+echo 127.0.0.1       localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
+echo ::1             localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
+ipconfig /flushdns >nul
+taskkill /f /im "Fiddler.exe" /t >nul 2>&1
+taskkill /f /im "Fiddler4.exe" /t >nul 2>&1
+taskkill /f /im "FiddlerAnywhere.exe" /t >nul 2>&1
+taskkill /f /im "Wireshark.exe" /t >nul 2>&1
+taskkill /f /im "Charles.exe" /t >nul 2>&1
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+netsh winhttp reset proxy >nul 2>&1
 goto :eof
 
 :fix_injector
@@ -215,29 +270,17 @@ echo   Made by Syno317 / BlackStageX
 echo ==============================
 echo.
 echo [*] Adding C:\Cosmic to Windows Defender exclusions...
-powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%cosmicPath%'"
+powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%cosmicPath%' -ErrorAction SilentlyContinue"
 
-echo [*] Searching for Synapse Launcher.exe on all drives...
-set "synapsefolder="
-
-for %%X in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-    if exist "%%X:\" (
-        for /r "%%X:\" %%F in ("Synapse Launcher.exe") do (
-            if not defined synapsefolder (
-                set "synapsefolder=%%~dpF"
-            )
-        )
-    )
-)
-
-if not defined synapsefolder (
+call :find_synapse_launcher
+if not defined found (
     echo [!] Synapse Launcher.exe not found, skipping...
     goto :exclusion_done
 )
-
+set "synapsefolder=%~dpfound"
 echo [*] Found Synapse at: %synapsefolder%
 echo [*] Adding Synapse folder to Windows Defender exclusions...
-powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%synapsefolder%'"
+powershell -NoProfile -Command "Add-MpPreference -ExclusionPath '%synapsefolder%' -ErrorAction SilentlyContinue"
 
 :exclusion_done
 echo.
@@ -258,20 +301,7 @@ echo.
 echo [0x1] Anti-Tamper Failed
 echo Cause: Modified hosts file, DNS hijacking or proxy software.
 echo.
-echo [*] Resetting hosts file...
-echo # Copyright (c) 1993-2009 Microsoft Corp. > "%SystemRoot%\System32\drivers\etc\hosts"
-echo 127.0.0.1       localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
-echo ::1             localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-echo [*] Killing proxy tools...
-taskkill /f /im "Fiddler.exe" /t >nul 2>&1
-taskkill /f /im "Fiddler4.exe" /t >nul 2>&1
-taskkill /f /im "FiddlerAnywhere.exe" /t >nul 2>&1
-taskkill /f /im "Wireshark.exe" /t >nul 2>&1
-taskkill /f /im "Charles.exe" /t >nul 2>&1
-echo [*] Disabling proxy settings...
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+call :clean_network
 echo.
 echo [+] The issue is fixed, enjoy!
 echo.
@@ -343,16 +373,7 @@ echo.
 echo [0x5] Malformed Server Response
 echo Cause: A network proxy or firewall is injecting content.
 echo.
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-echo [*] Killing proxy tools...
-taskkill /f /im "Fiddler.exe" /t >nul 2>&1
-taskkill /f /im "Fiddler4.exe" /t >nul 2>&1
-taskkill /f /im "FiddlerAnywhere.exe" /t >nul 2>&1
-taskkill /f /im "Wireshark.exe" /t >nul 2>&1
-taskkill /f /im "Charles.exe" /t >nul 2>&1
-echo [*] Disabling proxy settings...
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+call :clean_network
 echo.
 echo [+] The issue is fixed, enjoy!
 echo.
@@ -492,15 +513,7 @@ echo.
 echo [0x11] Malformed Server Response (SecureAuth)
 echo Cause: Secure authentication response could not be parsed.
 echo.
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-echo [*] Killing proxy tools...
-taskkill /f /im "Fiddler.exe" /t >nul 2>&1
-taskkill /f /im "Fiddler4.exe" /t >nul 2>&1
-taskkill /f /im "Wireshark.exe" /t >nul 2>&1
-taskkill /f /im "Charles.exe" /t >nul 2>&1
-echo [*] Disabling proxy settings...
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+call :clean_network
 echo.
 echo [+] The issue is fixed, enjoy!
 echo.
@@ -519,19 +532,7 @@ echo.
 echo [0x12] Anti-Tamper Failed (Authenticate)
 echo Cause: Same as 0x1 but during automatic authentication flow.
 echo.
-echo [*] Resetting hosts file...
-echo # Copyright (c) 1993-2009 Microsoft Corp. > "%SystemRoot%\System32\drivers\etc\hosts"
-echo 127.0.0.1       localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
-echo ::1             localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-echo [*] Killing proxy tools...
-taskkill /f /im "Fiddler.exe" /t >nul 2>&1
-taskkill /f /im "Fiddler4.exe" /t >nul 2>&1
-taskkill /f /im "Wireshark.exe" /t >nul 2>&1
-taskkill /f /im "Charles.exe" /t >nul 2>&1
-echo [*] Disabling proxy settings...
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+call :clean_network
 echo.
 echo [+] The issue is fixed, enjoy!
 echo.
