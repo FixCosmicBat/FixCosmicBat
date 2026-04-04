@@ -10,7 +10,7 @@ title Cosmic Fix Tool
 color 0A
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.1"
+set "CURRENT_VER=1.0.2"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
@@ -68,43 +68,23 @@ echo      COSMIC FIX TOOL v%CURRENT_VER%
 echo   Made by Syno317 / BlackStageX
 echo ==============================
 echo.
-echo [1]  Fix Roblox Crash on Inject (CFG + DirectX + Fishstrap)
-echo [2]  Fix Injector / Module Error
-echo [3]  Fix Login Error
-echo [4]  Fix Antivirus Exclusion (C:\Cosmic)
-echo [5]  Fix Error 0x1  - Anti-Tamper Failed
-echo [6]  Fix Error 0x2  - Hardware ID Failed
-echo [7]  Fix Error 0x3  - Empty Server Response
-echo [8]  Fix Error 0x5  - Malformed Server Response
-echo [9]  Fix Error 0x6  - Server Rejected Login
-echo [10] Fix Error 0x7  - No Session Token
-echo [11] Fix Error 0x8  - Hardware ID Failed (SecureAuth)
-echo [12] Fix Error 0x9  - Empty Server Response (SecureAuth)
-echo [13] Fix Error 0x10 - Server Rejected SecureAuth
-echo [14] Fix Error 0x11 - Malformed Server Response (SecureAuth)
-echo [15] Fix Error 0x12 - Anti-Tamper Failed (Authenticate)
-echo [16] Fix Error 0x13 - Missing Credentials
-echo [17] Exit
+echo [1] Fix Roblox Crash on Inject (CFG + DirectX + Fishstrap)
+echo [2] Fix Injector / Module Error
+echo [3] Fix Login Error
+echo [4] Fix Antivirus Exclusion (C:\Cosmic)
+echo [5] Fix All Errors (0x1 - 0x13 Combined)
+echo [6] Fix Version Mismatch - Roblox Version Error
+echo [7] Exit
 echo.
 set /p choice=Select option: 
 
-if "%choice%"=="1"  goto fix_roblox_crash
-if "%choice%"=="2"  goto fix_injector
-if "%choice%"=="3"  goto fix_login
-if "%choice%"=="4"  goto fix_exclusion
-if "%choice%"=="5"  goto err_0x1
-if "%choice%"=="6"  goto err_0x2
-if "%choice%"=="7"  goto err_0x3
-if "%choice%"=="8"  goto err_0x5
-if "%choice%"=="9"  goto err_0x6
-if "%choice%"=="10" goto err_0x7
-if "%choice%"=="11" goto err_0x8
-if "%choice%"=="12" goto err_0x9
-if "%choice%"=="13" goto err_0x10
-if "%choice%"=="14" goto err_0x11
-if "%choice%"=="15" goto err_0x12
-if "%choice%"=="16" goto err_0x13
-if "%choice%"=="17" exit
+if "%choice%"=="1" goto fix_roblox_crash
+if "%choice%"=="2" goto fix_injector
+if "%choice%"=="3" goto fix_login
+if "%choice%"=="4" goto fix_exclusion
+if "%choice%"=="5" goto fix_all_errors
+if "%choice%"=="6" goto fix_version_mismatch
+if "%choice%"=="7" exit
 
 goto menu
 
@@ -293,263 +273,126 @@ echo.
 pause
 goto menu
 
-:err_0x1
+:fix_all_errors
 cls
 echo ==============================
 echo      COSMIC FIX TOOL v%CURRENT_VER%
 echo   Made by Syno317 / BlackStageX
 echo ==============================
 echo.
-echo [0x1] Anti-Tamper Failed
-echo Cause: Modified hosts file, DNS hijacking or proxy software.
+echo [Fix] ALL Errors Combined (0x1 - 0x13)
 echo.
-call :clean_network
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
 
-:err_0x2
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x2] Hardware ID Failed
-echo Cause: WMI service issues or restricted system permissions.
-echo.
-call :restart_wmi
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
-
-:err_0x3
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x3] Empty Server Response
-echo Cause: Network or connectivity issue.
-echo.
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-call :reset_network_stack
-echo [*] Killing proxy tools...
-taskkill /f /im "Fiddler.exe" /t >nul 2>&1
-taskkill /f /im "Fiddler4.exe" /t >nul 2>&1
-taskkill /f /im "Wireshark.exe" /t >nul 2>&1
-taskkill /f /im "Charles.exe" /t >nul 2>&1
-echo.
-echo [!] A system restart may be required.
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
-
-:err_0x5
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x5] Malformed Server Response
-echo Cause: A network proxy or firewall is injecting content.
-echo.
-call :clean_network
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
-
-:err_0x6
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x6] Server Rejected Login
-echo Cause: Invalid credentials or account issue.
-echo.
 echo [*] Removing saved credentials...
 attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
 del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
-echo.
-echo [!] Use your Cosmic USERNAME, not your email.
-echo [!] If issue persists, check your account at cosmic.best
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
+echo [+] Credentials cleared.
 
-:err_0x7
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x7] No Session Token
-echo Cause: Initial login did not complete successfully.
-echo.
-echo [*] Removing saved credentials...
-attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
-del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-echo.
-echo [!] Please re-login when Synapse launches.
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
+echo [*] Resetting hosts file...
+echo # Copyright (c) 1993-2009 Microsoft Corp. > "%SystemRoot%\System32\drivers\etc\hosts"
+echo 127.0.0.1       localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
+echo ::1             localhost >> "%SystemRoot%\System32\drivers\etc\hosts"
+echo [+] Hosts file reset.
 
-:err_0x8
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x8] Hardware ID Failed (SecureAuth)
-echo Cause: Hardware fingerprint failed during secure authentication.
-echo.
-call :restart_wmi
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
+echo [*] Disabling proxy...
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+netsh winhttp reset proxy >nul 2>&1
+echo [+] Proxy disabled.
 
-:err_0x9
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x9] Empty Server Response (SecureAuth)
-echo Cause: Secure authentication server returned an empty response.
-echo.
-echo [*] Flushing DNS cache...
-ipconfig /flushdns >nul
-call :reset_network_stack
-echo.
-echo [!] A system restart may be required.
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
+echo [*] Flushing DNS...
+ipconfig /flushdns >nul 2>&1
+echo [+] DNS flushed.
 
-:err_0x10
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
+echo [*] Restarting WMI service...
+net stop winmgmt /y >nul 2>&1
+net start winmgmt >nul 2>&1
+net stop "WMI Performance Adapter" /y >nul 2>&1
+net start "WMI Performance Adapter" >nul 2>&1
+echo [+] WMI restarted.
+
+echo [*] Resetting network stack...
+netsh int ip reset >nul 2>&1
+netsh winsock reset >nul 2>&1
+echo [+] Network stack reset.
+
 echo.
-echo [0x10] Server Rejected SecureAuth
-echo Cause: License invalid, expired, or HWID has changed.
-echo.
-echo [*] Removing saved credentials...
-attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
-del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
-echo.
-echo [!] If license expired, renew at cosmic.best
+echo [+] All errors fixed! Re-login when Synapse launches.
 echo [!] If HWID changed, contact support: discord.gg/getcosmic
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menu
-
-:err_0x11
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x11] Malformed Server Response (SecureAuth)
-echo Cause: Secure authentication response could not be parsed.
-echo.
-call :clean_network
-echo.
-echo [+] The issue is fixed, enjoy!
+echo [!] If license expired, renew at cosmic.best
 echo.
 echo   Made by Syno317 / BlackStageX
 echo.
 pause
 goto menu
 
-:err_0x12
+:fix_version_mismatch
 cls
 echo ==============================
 echo      COSMIC FIX TOOL v%CURRENT_VER%
 echo   Made by Syno317 / BlackStageX
 echo ==============================
 echo.
-echo [0x12] Anti-Tamper Failed (Authenticate)
-echo Cause: Same as 0x1 but during automatic authentication flow.
+echo [Fix] Roblox Version Mismatch
 echo.
-call :clean_network
+
+echo [*] Clearing old Roblox versions...
+set "robloxVersionsPath=%LOCALAPPDATA%\Roblox\Versions"
+if not defined LOCALAPPDATA (
+    echo [!] LOCALAPPDATA not found, trying registry...
+    for /f "tokens=2*" %%A in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Local AppData" 2^>nul') do set "robloxVersionsPath=%%B\Roblox\Versions"
+)
+echo [*] Roblox Versions path: %robloxVersionsPath%
+if exist "%robloxVersionsPath%" (
+    rd /s /q "%robloxVersionsPath%" >nul 2>&1
+    echo [+] Old versions cleared.
+) else (
+    echo [!] Versions folder not found, skipping...
+)
+
+echo [*] Downloading new Roblox version zip...
+powershell -NoProfile -Command "Invoke-WebRequest 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/RobloxVersion/version-6776addb8fbc4d17.zip' -OutFile 'C:\roblox_version.zip'"
+
+if not exist "C:\roblox_version.zip" (
+    echo [!] Download failed. Please check your internet connection.
+    pause
+    goto menu
+)
+
+echo [*] Extracting zip...
+powershell -NoProfile -Command "Expand-Archive -Path 'C:\roblox_version.zip' -DestinationPath 'C:\roblox_extracted' -Force"
+
+if not exist "C:\roblox_extracted" (
+    echo [!] Extraction failed.
+    del /f /q "C:\roblox_version.zip" >nul 2>&1
+    pause
+    goto menu
+)
+
+echo [*] Copying version folder to Roblox Versions...
+if not exist "%robloxVersionsPath%" mkdir "%robloxVersionsPath%"
+
+for /d %%D in ("C:\roblox_extracted\*") do (
+    xcopy /e /i /y "%%D" "%robloxVersionsPath%\%%~nxD\" >nul
+    echo [+] Copied: %%~nxD
+)
+
+echo [*] Cleaning up...
+del /f /q "C:\roblox_version.zip" >nul 2>&1
+rd /s /q "C:\roblox_extracted" >nul 2>&1
+
+echo [*] Launching Roblox...
+set "robloxExe=%robloxVersionsPath%\version-6776addb8fbc4d17\RobloxPlayerBeta.exe"
+if exist "%robloxExe%" (
+    start "" "%robloxExe%"
+    echo [+] Roblox launched!
+) else (
+    echo [!] RobloxPlayerBeta.exe not found, please launch manually.
+)
+
 echo.
-echo [+] The issue is fixed, enjoy!
+echo [+] Version Mismatch fix applied!
 echo.
 echo   Made by Syno317 / BlackStageX
 echo.
 pause
 goto menu
-
-:err_0x13
-cls
-echo ==============================
-echo      COSMIC FIX TOOL v%CURRENT_VER%
-echo   Made by Syno317 / BlackStageX
-echo ==============================
-echo.
-echo [0x13] Missing Credentials
-echo Cause: No saved credentials found or credentials file is corrupted.
-echo.
-echo [*] Removing corrupted credentials file...
-attrib -r -s -h "%cosmicPath%\Credentials.dat" 2>nul
-del /f /q "%cosmicPath%\Credentials.dat" >nul 2>&1
-echo.
-echo [!] Please re-login when Synapse launches.
-echo.
-echo [+] The issue is fixed, enjoy!
-echo.
-echo   Made by Syno317 / BlackStageX
-echo.
-pause
-goto menuv
