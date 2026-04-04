@@ -10,7 +10,7 @@ title Cosmic Fix Tool
 color 0A
 
 set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=1.0.2"
+set "CURRENT_VER=1.0.3"
 set "SELF=%~f0"
 set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
 set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
@@ -350,7 +350,7 @@ if exist "%robloxVersionsPath%" (
 )
 
 echo [*] Downloading new Roblox version zip...
-powershell -NoProfile -Command "Invoke-WebRequest 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/RobloxVersion/version-6776addb8fbc4d17.zip' -OutFile 'C:\roblox_version.zip'"
+powershell -NoProfile -Command "$ProgressPreference='Continue'; $url='https://github.com/FixCosmicBat/FixCosmicBat/releases/download/RobloxVersion/version-6776addb8fbc4d17.zip'; $out='C:\roblox_version.zip'; $wc=New-Object System.Net.WebClient; Register-ObjectEvent $wc DownloadProgressChanged -Action {Write-Progress -Activity 'Downloading Roblox' -Status ($Event.SourceEventArgs.ProgressPercentage.ToString()+'%') -PercentComplete $Event.SourceEventArgs.ProgressPercentage} | Out-Null; $wc.DownloadFileAsync([uri]$url,$out); while($wc.IsBusy){Start-Sleep -Milliseconds 500}; Write-Host '[+] Download complete!'"
 
 if not exist "C:\roblox_version.zip" (
     echo [!] Download failed. Please check your internet connection.
