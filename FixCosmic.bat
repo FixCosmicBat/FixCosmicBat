@@ -10,13 +10,13 @@ if %errorLevel% neq 0 (
     exit /b
 )
 
-title Cosmic Fix Tool v2.0.0
+title Cosmic Fix Tool v2.0.1
 color 5
 
 :: =====================================
 :: Auto-Update Check
 :: =====================================
-set "CURRENT_VERSION=2.0.0"
+set "CURRENT_VERSION=2.0.1"
 set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/version.txt"
 set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/FixCosmic.bat"
 set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
@@ -229,4 +229,5 @@ echo =====================================
 echo.
 echo Cosmic has been repaired and restarted.
 echo.
-pause
+pause >nul
+exit
