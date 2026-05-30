@@ -10,17 +10,17 @@ if %errorLevel% neq 0 (
     exit /b
 )
 
-title Cosmic Fix Tool v2.0.1
+title Cosmic Fix Tool v2.0.0
 color 5
 
 :: =====================================
 :: Auto-Update Check
 :: =====================================
-set "CURRENT_VERSION=2.0.1"
+set "CURRENT_VERSION=2.0.0"
 set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/version.txt"
 set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/FixCosmic.bat"
 set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
-set "VERSION_TEMP=%TEMP%\cosmic_version.txt"
+set "UPDATER_TEMP=%TEMP%\CosmicUpdater.bat"
 
 echo =====================================
 echo         Cosmic Fix Tool v%CURRENT_VERSION%
@@ -28,19 +28,17 @@ echo =====================================
 echo.
 echo Checking for updates...
 
-powershell -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_TEMP%' -TimeoutSec 5 } catch { }" >nul 2>&1
+:: version.txt oku, trim et
+powershell -ExecutionPolicy Bypass -Command "try { $v = (Invoke-WebRequest -Uri '%VERSION_URL%' -TimeoutSec 5 -UseBasicParsing).Content.Trim(); Set-Content -Path '%TEMP%\cv.txt' -Value $v -NoNewline } catch { }" >nul 2>&1
 
-if not exist "%VERSION_TEMP%" (
+if not exist "%TEMP%\cv.txt" (
     echo [Update] Could not reach update server. Continuing with current version.
     echo.
     goto :MAIN
 )
 
-set /p LATEST_VERSION=<"%VERSION_TEMP%"
-del "%VERSION_TEMP%" >nul 2>&1
-
-:: Trim whitespace/newline from version string
-for /f "tokens=* delims= " %%a in ("%LATEST_VERSION%") do set "LATEST_VERSION=%%a"
+set /p LATEST_VERSION=<"%TEMP%\cv.txt"
+del "%TEMP%\cv.txt" >nul 2>&1
 
 if "%LATEST_VERSION%"=="%CURRENT_VERSION%" (
     echo [Update] Already up to date ^(v%CURRENT_VERSION%^).
@@ -51,7 +49,7 @@ if "%LATEST_VERSION%"=="%CURRENT_VERSION%" (
 echo [Update] New version found: v%LATEST_VERSION% ^(current: v%CURRENT_VERSION%^)
 echo Downloading update...
 
-powershell -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri '%BAT_URL%' -OutFile '%UPDATE_TEMP%' } catch { exit 1 }" >nul 2>&1
+powershell -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri '%BAT_URL%' -OutFile '%UPDATE_TEMP%' -UseBasicParsing } catch { }" >nul 2>&1
 
 if not exist "%UPDATE_TEMP%" (
     echo [Update] Download failed. Continuing with current version.
@@ -59,12 +57,19 @@ if not exist "%UPDATE_TEMP%" (
     goto :MAIN
 )
 
-echo [Update] Update downloaded. Launching new version...
-echo.
+:: Kendini guncelleyen ayri bir bat yaz, boylece path sorunu olmaz
+set "SELF=%~f0"
+(
+    echo @echo off
+    echo ping -n 3 127.0.0.1 ^>nul
+    echo copy /Y "%UPDATE_TEMP%" "%SELF%" ^>nul
+    echo del "%UPDATE_TEMP%" ^>nul
+    echo start "" "%SELF%"
+    echo del "%UPDATER_TEMP%"
+) > "%UPDATER_TEMP%"
 
-:: Bat kendisi calisirken uzerine yazamazsin.
-:: Ayri bir cmd islemi 2 saniye bekleyip kopyalar, sonra yeni versiyonu baslatir.
-start "" cmd /c "ping -n 3 127.0.0.1 >nul & copy /Y ""%UPDATE_TEMP%"" ""%~f0"" >nul & del ""%UPDATE_TEMP%"" >nul & start """" ""%~f0"""
+echo [Update] Update downloaded. Restarting with new version...
+start "" "%UPDATER_TEMP%"
 exit /b
 
 :: =====================================
