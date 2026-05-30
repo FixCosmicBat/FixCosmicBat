@@ -22,7 +22,7 @@ set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/Fi
 set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
 set "UPDATER_TEMP=%TEMP%\CosmicUpdater.bat"
 
-:: Guncelleme sonrasi tekrar buraya gelmesin
+:: Skip update check if already updated
 if "%1"=="--updated" goto :MAIN
 
 echo =====================================
