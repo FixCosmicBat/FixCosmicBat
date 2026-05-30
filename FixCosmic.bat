@@ -22,13 +22,16 @@ set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/Fi
 set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
 set "UPDATER_TEMP=%TEMP%\CosmicUpdater.bat"
 
+:: Guncelleme sonrasi tekrar buraya gelmesin
+if "%1"=="--updated" goto :MAIN
+
 echo =====================================
 echo         Cosmic Fix Tool v%CURRENT_VERSION%
+echo        Made by Syno317
 echo =====================================
 echo.
 echo Checking for updates...
 
-:: version.txt oku, trim et
 powershell -ExecutionPolicy Bypass -Command "try { $v = (Invoke-WebRequest -Uri '%VERSION_URL%' -TimeoutSec 5 -UseBasicParsing).Content.Trim(); Set-Content -Path '%TEMP%\cv.txt' -Value $v -NoNewline } catch { }" >nul 2>&1
 
 if not exist "%TEMP%\cv.txt" (
@@ -57,15 +60,15 @@ if not exist "%UPDATE_TEMP%" (
     goto :MAIN
 )
 
-:: Kendini guncelleyen ayri bir bat yaz, boylece path sorunu olmaz
 set "SELF=%~f0"
 (
     echo @echo off
     echo ping -n 3 127.0.0.1 ^>nul
     echo copy /Y "%UPDATE_TEMP%" "%SELF%" ^>nul
-    echo del "%UPDATE_TEMP%" ^>nul
-    echo start "" "%SELF%"
-    echo del "%UPDATER_TEMP%"
+    echo del /F /Q "%UPDATE_TEMP%"
+    echo del /F /Q "%TEMP%\cv.txt" 2^>nul
+    echo start "" "%SELF%" --updated
+    echo del /F /Q "%UPDATER_TEMP%"
 ) > "%UPDATER_TEMP%"
 
 echo [Update] Update downloaded. Restarting with new version...
@@ -123,7 +126,6 @@ set "COSMIC_DATA=%LOCALAPPDATA%\com.savage.cosmic"
 
 set "EBZIP=%TEMP%\EBWebView.zip"
 set "EBTEMP=%TEMP%\EBWebViewFix"
-
 set "BINZIP=%TEMP%\bin.zip"
 set "BINTEMP=%TEMP%\BinFix"
 
@@ -135,7 +137,6 @@ echo.
 :: Close Cosmic
 :: =====================================
 echo [1/7] Closing Cosmic...
-
 taskkill /F /IM "Cosmic-UI.exe" >nul 2>&1
 timeout /t 3 >nul
 
@@ -144,15 +145,13 @@ timeout /t 3 >nul
 :: =====================================
 echo.
 echo [2/7] Removing old EBWebView...
-
 if exist "%COSMIC_DATA%\EBWebView" (
     rmdir /s /q "%COSMIC_DATA%\EBWebView"
 )
 
 echo.
 echo [3/7] Downloading latest EBWebView...
-
-powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/Ebwiev/EBWebView.zip' -OutFile '%EBZIP%'"
+powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/Ebwiev/EBWebView.zip' -OutFile '%EBZIP%' -UseBasicParsing"
 
 if not exist "%EBZIP%" (
     echo.
@@ -162,7 +161,6 @@ if not exist "%EBZIP%" (
 )
 
 if exist "%EBTEMP%" rmdir /s /q "%EBTEMP%"
-
 powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path '%EBZIP%' -DestinationPath '%EBTEMP%' -Force"
 
 if exist "%EBTEMP%\EBWebView" (
@@ -171,7 +169,7 @@ if exist "%EBTEMP%\EBWebView" (
     xcopy "%EBTEMP%" "%COSMIC_DATA%\EBWebView\" /E /H /C /I /Y >nul
 )
 
-del "%EBZIP%" >nul 2>&1
+del /F /Q "%EBZIP%" >nul 2>&1
 rmdir /s /q "%EBTEMP%" >nul 2>&1
 
 :: =====================================
@@ -179,15 +177,13 @@ rmdir /s /q "%EBTEMP%" >nul 2>&1
 :: =====================================
 echo.
 echo [4/7] Removing old bin folder...
-
 if exist "%BIN_DIR%" (
     rmdir /s /q "%BIN_DIR%"
 )
 
 echo.
 echo [5/7] Downloading latest bin folder...
-
-powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/Bin/bin.zip' -OutFile '%BINZIP%'"
+powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/FixCosmicBat/FixCosmicBat/releases/download/Bin/bin.zip' -OutFile '%BINZIP%' -UseBasicParsing"
 
 if not exist "%BINZIP%" (
     echo.
@@ -197,7 +193,6 @@ if not exist "%BINZIP%" (
 )
 
 if exist "%BINTEMP%" rmdir /s /q "%BINTEMP%"
-
 powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path '%BINZIP%' -DestinationPath '%BINTEMP%' -Force"
 
 if exist "%BINTEMP%\bin" (
@@ -206,7 +201,7 @@ if exist "%BINTEMP%\bin" (
     xcopy "%BINTEMP%" "%BIN_DIR%\" /E /H /C /I /Y >nul
 )
 
-del "%BINZIP%" >nul 2>&1
+del /F /Q "%BINZIP%" >nul 2>&1
 rmdir /s /q "%BINTEMP%" >nul 2>&1
 
 :: =====================================
@@ -214,7 +209,6 @@ rmdir /s /q "%BINTEMP%" >nul 2>&1
 :: =====================================
 echo.
 echo [6/7] Adding Windows Defender exclusions...
-
 powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionPath '%LOCALAPPDATA%\com.savage.cosmic'" >nul 2>&1
 powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionProcess 'Cosmic-UI.exe'" >nul 2>&1
 
@@ -223,7 +217,6 @@ powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionProcess 
 :: =====================================
 echo.
 echo [7/7] Restarting Cosmic...
-
 if exist "%COSMIC_EXE%" (
     start "" "%COSMIC_EXE%"
 )
@@ -231,6 +224,7 @@ if exist "%COSMIC_EXE%" (
 echo.
 echo =====================================
 echo       FIX COMPLETED SUCCESSFULLY
+echo        Made by Syno317
 echo =====================================
 echo.
 echo Cosmic has been repaired and restarted.
