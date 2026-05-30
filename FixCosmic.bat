@@ -1,68 +1,81 @@
 @echo off
+
+:: =====================================
+:: Request Administrator Privileges
+:: =====================================
 net session >nul 2>&1
-if %errorLevel% NEQ 0 (
-    echo [!] Administrator permission required. Please approve...
+if %errorLevel% neq 0 (
+    echo Requesting administrator privileges...
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
 
-title Cosmic Fix Tool
-color 0A
+title Cosmic Fix Tool v2.0.1
+color 5
 
-set "cosmicPath=C:\Cosmic"
-set "CURRENT_VER=2.0.0"
-set "SELF=%~f0"
-set "RAW_VER=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/version.txt"
-set "RAW_BAT=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/refs/heads/main/FixCosmic.bat"
+:: =====================================
+:: Auto-Update Check
+:: =====================================
+set "CURRENT_VERSION=2.0.0"
+set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/version.txt"
+set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/FixCosmic.bat"
+set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
+set "VERSION_TEMP=%TEMP%\cosmic_version.txt"
 
-goto menu
+echo =====================================
+echo         Cosmic Fix Tool v%CURRENT_VERSION%
+echo =====================================
+echo.
+echo Checking for updates...
 
-:check_update
-echo [*] Checking for updates...
+powershell -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_TEMP%' -TimeoutSec 5 } catch { }" >nul 2>&1
 
-powershell -NoProfile -NonInteractive -Command ^
-  "$ErrorActionPreference='SilentlyContinue';" ^
-  "$v=(Invoke-WebRequest '%RAW_VER%' -UseBasicParsing -TimeoutSec 5).Content.Trim();" ^
-  "if($v -and $v -ne '%CURRENT_VER%'){" ^
-  "  Invoke-WebRequest '%RAW_BAT%' -OutFile '%SELF%.new' -UseBasicParsing -TimeoutSec 15;" ^
-  "  Write-Host $v" ^
-  "} else { Write-Host $v }" ^
-  > "%temp%\cosmic_ver.txt" 2>nul
-
-set "LATEST_VER="
-set /p LATEST_VER=<"%temp%\cosmic_ver.txt"
-del "%temp%\cosmic_ver.txt" >nul 2>&1
-
-if "%LATEST_VER%"=="" (
-    echo [!] Could not check for updates. Continuing...
-    goto menu
+if not exist "%VERSION_TEMP%" (
+    echo [Update] Could not reach update server. Continuing with current version.
+    echo.
+    goto :MAIN
 )
 
-if "%CURRENT_VER%"=="%LATEST_VER%" (
-    echo [+] Already up to date ^(v%CURRENT_VER%^).
-    goto menu
+set /p LATEST_VERSION=<"%VERSION_TEMP%"
+del "%VERSION_TEMP%" >nul 2>&1
+
+:: Trim whitespace/newline from version string
+for /f "tokens=* delims= " %%a in ("%LATEST_VERSION%") do set "LATEST_VERSION=%%a"
+
+if "%LATEST_VERSION%"=="%CURRENT_VERSION%" (
+    echo [Update] Already up to date ^(v%CURRENT_VERSION%^).
+    echo.
+    goto :MAIN
 )
 
-if not exist "%SELF%.new" (
-    echo [!] Update download failed. Continuing...
-    goto menu
+echo [Update] New version found: v%LATEST_VERSION% ^(current: v%CURRENT_VERSION%^)
+echo Downloading update...
+
+powershell -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -Uri '%BAT_URL%' -OutFile '%UPDATE_TEMP%' } catch { exit 1 }" >nul 2>&1
+
+if not exist "%UPDATE_TEMP%" (
+    echo [Update] Download failed. Continuing with current version.
+    echo.
+    goto :MAIN
 )
 
-for %%F in ("%SELF%.new") do if %%~zF==0 (
-    del "%SELF%.new" >nul 2>&1
-    echo [!] Downloaded file is empty. Continuing...
-    goto menu
-)
+echo [Update] Update downloaded. Launching new version...
+echo.
 
-echo [+] Updated to v%LATEST_VER%! Restarting...
-echo move /y "%SELF%.new" "%SELF%" > "%temp%\cosmic_update.bat"
-echo start "" "%SELF%" /updated >> "%temp%\cosmic_update.bat"
-echo del "%temp%\cosmic_update.bat" >> "%temp%\cosmic_update.bat"
-start "" cmd /c "timeout /t 2 >nul & "%temp%\cosmic_update.bat""
-exit
+:: Bat kendisi calisirken uzerine yazamazsin.
+:: Ayri bir cmd islemi 2 saniye bekleyip kopyalar, sonra yeni versiyonu baslatir.
+start "" cmd /c "ping -n 3 127.0.0.1 >nul & copy /Y ""%UPDATE_TEMP%"" ""%~f0"" >nul & del ""%UPDATE_TEMP%"" >nul & start """" ""%~f0"""
+exit /b
 
-:menu
-cls
+:: =====================================
+:: MAIN - Fix Process
+:: =====================================
+:MAIN
+
+echo IMPORTANT:
+echo Cosmic MUST be OPEN before running this fix.
+echo.
+
 set /p CONFIRM1=Is Cosmic currently open? (Y/N): 
 
 if /I not "%CONFIRM1%"=="Y" (
