@@ -10,13 +10,13 @@ if %errorLevel% neq 0 (
     exit /b
 )
 
-title Cosmic Fix Tool v2.0.1
+title Cosmic Fix Tool v2.0.0
 color 5
 
 :: =====================================
 :: Auto-Update Check
 :: =====================================
-set "CURRENT_VERSION=2.0.1"
+set "CURRENT_VERSION=2.0.0"
 set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/version.txt"
 set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/FixCosmic.bat"
 set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
@@ -110,7 +110,7 @@ echo.
 :: =====================================
 :: Get Cosmic path from running process
 :: =====================================
-for /f "delims=" %%i in ('powershell -Command "(Get-Process Cosmic-UI -ErrorAction SilentlyContinue).Path"') do set "COSMIC_EXE=%%i"
+for /f "delims=" %%i in ('powershell -Command "(Get-Process UI -ErrorAction SilentlyContinue).Path"') do set "COSMIC_EXE=%%i"
 
 if not defined COSMIC_EXE (
     echo [ERROR] Could not detect Cosmic.
@@ -137,7 +137,7 @@ echo.
 :: Close Cosmic
 :: =====================================
 echo [1/7] Closing Cosmic...
-taskkill /F /IM "Cosmic-UI.exe" >nul 2>&1
+taskkill /F /IM "UI.exe" >nul 2>&1
 timeout /t 3 >nul
 
 :: =====================================
@@ -210,7 +210,7 @@ rmdir /s /q "%BINTEMP%" >nul 2>&1
 echo.
 echo [6/7] Adding Windows Defender exclusions...
 powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionPath '%LOCALAPPDATA%\com.savage.cosmic'" >nul 2>&1
-powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionProcess 'Cosmic-UI.exe'" >nul 2>&1
+powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionProcess 'UI.exe'" >nul 2>&1
 
 :: =====================================
 :: Restart Cosmic
