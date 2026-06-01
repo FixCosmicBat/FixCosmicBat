@@ -10,7 +10,7 @@ if %errorLevel% neq 0 (
     exit /b
 )
 
-title Cosmic Fix Tool v2.0.0
+title Cosmic Fix Tool v2.0.2
 color 5
 
 :: =====================================
