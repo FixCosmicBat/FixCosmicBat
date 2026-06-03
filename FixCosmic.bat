@@ -10,20 +10,17 @@ if %errorLevel% neq 0 (
     exit /b
 )
 
-title Cosmic Fix Tool v2.0.3
+title Cosmic Fix Tool v2.0.2
 color 5
 
 :: =====================================
 :: Auto-Update Check
 :: =====================================
-set "CURRENT_VERSION=2.0.3"
+set "CURRENT_VERSION=2.0.2"
 set "VERSION_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/version.txt"
 set "BAT_URL=https://raw.githubusercontent.com/FixCosmicBat/FixCosmicBat/main/FixCosmic.bat"
 set "UPDATE_TEMP=%TEMP%\FixCosmic_new.bat"
 set "UPDATER_TEMP=%TEMP%\CosmicUpdater.bat"
-set "COSMIC_INSTALL_URL=https://files.catbox.moe/emubz5.rar"
-set "COSMIC_RAR=%TEMP%\Cosmic.rar"
-set "COSMIC_EXTRACT=%TEMP%\CosmicInstall"
 
 :: Skip update check if already updated
 if "%1"=="--updated" goto :MAIN
@@ -83,160 +80,44 @@ exit /b
 :: =====================================
 :MAIN
 
-echo =====================================
-echo         Cosmic Fix Tool v%CURRENT_VERSION%
-echo        Made by Syno317
-echo =====================================
+echo IMPORTANT:
+echo Cosmic MUST be OPEN before running this fix.
 echo.
 
-:: =====================================
-:: Detect Cosmic Process (any name)
-:: =====================================
-echo Detecting Cosmic installation...
+set /p CONFIRM1=Is Cosmic currently open? (Y/N): 
 
-:: Try UI.exe first
-for /f "delims=" %%i in ('powershell -Command "(Get-Process UI -ErrorAction SilentlyContinue).Path" 2^>nul') do set "COSMIC_EXE=%%i"
-
-:: If not found, search all processes for com.savage.cosmic path
-if not defined COSMIC_EXE (
-    for /f "delims=" %%i in ('powershell -Command "Get-Process | Where-Object { $_.Path -like '*com.savage.cosmic*' } | Select-Object -ExpandProperty Path -First 1" 2^>nul') do set "COSMIC_EXE=%%i"
-)
-
-:: If still not found, check LocalAppData folder directly
-if not defined COSMIC_EXE (
-    for /f "delims=" %%i in ('powershell -Command "Get-ChildItem '%LOCALAPPDATA%\com.savage.cosmic' -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike 'update*' } | Select-Object -ExpandProperty FullName -First 1" 2^>nul') do set "COSMIC_EXE=%%i"
-)
-
-:: =====================================
-:: If Cosmic not found - offer to install
-:: =====================================
-if not defined COSMIC_EXE (
+if /I not "%CONFIRM1%"=="Y" (
     echo.
-    echo [!] Cosmic could not be found on this system.
-    echo.
-    set /p INSTALL_CONFIRM=Cosmic is not installed. Do you want to download and install it now? (Y/N): 
-    if /I not "%INSTALL_CONFIRM%"=="Y" (
-        echo.
-        echo Operation cancelled.
-        pause >nul
-        exit
-    )
-    goto :INSTALL_COSMIC
+    echo Please open Cosmic and run the fix again.
+    pause
+    exit /b
 )
 
-echo [OK] Cosmic found: %COSMIC_EXE%
-echo.
-
-:: =====================================
-:: Confirm fix
-:: =====================================
-echo IMPORTANT: Cosmic will be closed during the fix.
 echo.
 set /p CONFIRM2=Do you want to start the repair process? (Y/N): 
 
 if /I not "%CONFIRM2%"=="Y" (
     echo.
     echo Operation cancelled.
-    pause >nul
-    exit
+    pause
+    exit /b
 )
 
-goto :FIX_COSMIC
+echo.
+echo Detecting Cosmic installation...
+echo.
 
 :: =====================================
-:: Install Cosmic
+:: Get Cosmic path from running process
 :: =====================================
-:INSTALL_COSMIC
+for /f "delims=" %%i in ('powershell -Command "(Get-Process UI -ErrorAction SilentlyContinue).Path"') do set "COSMIC_EXE=%%i"
 
-echo.
-echo [1/4] Downloading Cosmic...
-
-powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri '%COSMIC_INSTALL_URL%' -OutFile '%COSMIC_RAR%' -UseBasicParsing" >nul 2>&1
-
-if not exist "%COSMIC_RAR%" (
-    echo.
-    echo [ERROR] Failed to download Cosmic.
-    pause >nul
-    exit
+if not defined COSMIC_EXE (
+    echo [ERROR] Could not detect Cosmic.
+    echo Make sure Cosmic is running and try again.
+    pause
+    exit /b
 )
-
-echo.
-echo [2/4] Extracting Cosmic...
-
-if exist "%COSMIC_EXTRACT%" rmdir /s /q "%COSMIC_EXTRACT%"
-mkdir "%COSMIC_EXTRACT%"
-
-:: Try tar (Windows 10 built-in)
-tar -xf "%COSMIC_RAR%" -C "%COSMIC_EXTRACT%" >nul 2>&1
-
-:: Try 7-Zip
-if not exist "%COSMIC_EXTRACT%" (
-    if exist "C:\Program Files\7-Zip\7z.exe" (
-        "C:\Program Files\7-Zip\7z.exe" x "%COSMIC_RAR%" -o"%COSMIC_EXTRACT%" -y >nul 2>&1
-    )
-)
-
-:: Try WinRAR
-if not exist "%COSMIC_EXTRACT%" (
-    if exist "C:\Program Files\WinRAR\WinRAR.exe" (
-        "C:\Program Files\WinRAR\WinRAR.exe" x -y "%COSMIC_RAR%" "%COSMIC_EXTRACT%\" >nul 2>&1
-    )
-)
-
-:: Try WinRAR x86
-if not exist "%COSMIC_EXTRACT%" (
-    if exist "C:\Program Files (x86)\WinRAR\WinRAR.exe" (
-        "C:\Program Files (x86)\WinRAR\WinRAR.exe" x -y "%COSMIC_RAR%" "%COSMIC_EXTRACT%\" >nul 2>&1
-    )
-)
-
-if not exist "%COSMIC_EXTRACT%" (
-    echo.
-    echo [ERROR] Could not extract Cosmic. Please install 7-Zip and try again.
-    del /F /Q "%COSMIC_RAR%" >nul 2>&1
-    pause >nul
-    exit
-)
-
-echo.
-echo [3/4] Installing Cosmic...
-
-:: Find the installer or exe inside extracted folder
-for /f "delims=" %%i in ('powershell -Command "Get-ChildItem '%COSMIC_EXTRACT%' -Recurse -Filter '*.exe' | Select-Object -ExpandProperty FullName -First 1" 2^>nul') do set "COSMIC_SETUP=%%i"
-
-if not defined COSMIC_SETUP (
-    echo [ERROR] Could not find Cosmic executable in the archive.
-    pause >nul
-    exit
-)
-
-:: Add to Windows Defender exclusions before running
-powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionPath '%COSMIC_EXTRACT%'" >nul 2>&1
-powershell -ExecutionPolicy Bypass -Command "Add-MpPreference -ExclusionPath '%LOCALAPPDATA%\com.savage.cosmic'" >nul 2>&1
-
-start "" "%COSMIC_SETUP%"
-
-echo.
-echo [4/4] Cleaning up...
-timeout /t 5 >nul
-del /F /Q "%COSMIC_RAR%" >nul 2>&1
-rmdir /s /q "%COSMIC_EXTRACT%" >nul 2>&1
-
-echo.
-echo =====================================
-echo     COSMIC INSTALLED SUCCESSFULLY
-echo        Made by Syno317
-echo =====================================
-echo.
-echo Cosmic has been installed. Please open it and run this fix again to complete the repair.
-echo.
-pause >nul
-exit
-
-:: =====================================
-:: Fix Cosmic
-:: =====================================
-:FIX_COSMIC
 
 for %%F in ("%COSMIC_EXE%") do set "COSMIC_DIR=%%~dpF"
 
@@ -248,7 +129,8 @@ set "EBTEMP=%TEMP%\EBWebViewFix"
 set "BINZIP=%TEMP%\bin.zip"
 set "BINTEMP=%TEMP%\BinFix"
 
-echo Cosmic Path: %COSMIC_EXE%
+echo Cosmic Path:
+echo %COSMIC_EXE%
 echo.
 
 :: =====================================
@@ -256,7 +138,6 @@ echo.
 :: =====================================
 echo [1/7] Closing Cosmic...
 taskkill /F /IM "UI.exe" >nul 2>&1
-powershell -ExecutionPolicy Bypass -Command "Get-Process | Where-Object { $_.Path -like '*com.savage.cosmic*' } | Stop-Process -Force" >nul 2>&1
 timeout /t 3 >nul
 
 :: =====================================
@@ -275,8 +156,8 @@ powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://git
 if not exist "%EBZIP%" (
     echo.
     echo [ERROR] Failed to download EBWebView.
-    pause >nul
-    exit
+    pause
+    exit /b
 )
 
 if exist "%EBTEMP%" rmdir /s /q "%EBTEMP%"
@@ -307,8 +188,8 @@ powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://git
 if not exist "%BINZIP%" (
     echo.
     echo [ERROR] Failed to download bin folder.
-    pause >nul
-    exit
+    pause
+    exit /b
 )
 
 if exist "%BINTEMP%" rmdir /s /q "%BINTEMP%"
